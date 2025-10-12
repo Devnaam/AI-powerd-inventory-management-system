@@ -18,16 +18,25 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'Inventory AI MVP API Server Running',
     status: 'active',
+    version: '1.0.0',
     timestamp: new Date().toISOString()
   });
 });
 
-// API Routes (will be added in Phase 2)
-// app.use('/api/auth', require('./src/routes/authRoutes'));
-// app.use('/api/users', require('./src/routes/userRoutes'));
-// app.use('/api/products', require('./src/routes/productRoutes'));
-// app.use('/api/transactions', require('./src/routes/transactionRoutes'));
-// app.use('/api/dashboard', require('./src/routes/dashboardRoutes'));
+// API Routes
+app.use('/api/auth', require('./src/routes/authRoutes'));
+app.use('/api/products', require('./src/routes/productRoutes'));
+app.use('/api/transactions', require('./src/routes/transactionRoutes'));
+app.use('/api/dashboard', require('./src/routes/dashboardRoutes'));
+app.use('/api/ai', require('./src/routes/aiRoutes'));  // NEW AI ROUTE
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ 
+    success: false, 
+    message: 'Route not found' 
+  });
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

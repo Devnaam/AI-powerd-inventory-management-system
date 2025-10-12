@@ -1,0 +1,46 @@
+api/auth/register
+{
+    "success": true,
+    "data": {
+        "id": "68eb8d70d227cba41077c00b",
+        "name": "Admin User",
+        "email": "admin@inventory.com",
+        "role": "admin",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZWI4ZDcwZDIyN2NiYTQxMDc3YzAwYiIsImlhdCI6MTc2MDI2NzYzMywiZXhwIjoxNzYwODcyNDMzfQ.nSBJ22eh5mFhGZiWSDoehEdAbZ8MXVPDhGNH6Ji3NUY"
+    }
+}
+
+{
+    "success": true,
+    "data": {
+        "id": "68eb8e43d227cba41077c00e",
+        "name": "Manager User",
+        "email": "manager@inventory.com",
+        "role": "manager",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZWI4ZTQzZDIyN2NiYTQxMDc3YzAwZSIsImlhdCI6MTc2MDI2Nzg0MywiZXhwIjoxNzYwODcyNjQzfQ.CKha75R-EQx-1-Kba3KNNyhO6SBfwjl5PWw6AJ9uvAw"
+    }
+}
+
+{
+    "success": true,
+    "data": {
+        "id": "68eb8e6fd227cba41077c011",
+        "name": "Staff User",
+        "email": "staff@inventory.com",
+        "role": "staff",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZWI4ZTZmZDIyN2NiYTQxMDc3YzAxMSIsImlhdCI6MTc2MDI2Nzg4NywiZXhwIjoxNzYwODcyNjg3fQ.qMVEqKDdgXfo9De3qgpMVOtUwyh30t6eIAaJlbSdaB8"
+    }
+}
+
+http://localhost:5000/api/auth/login
+{
+    "success": true,
+    "data": {
+        "id": "68eb8d70d227cba41077c00b",
+        "name": "Admin User",
+        "email": "admin@inventory.com",
+        "role": "admin",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZWI4ZDcwZDIyN2NiYTQxMDc3YzAwYiIsImlhdCI6MTc2MDI2NzkyOCwiZXhwIjoxNzYwODcyNzI4fQ.b_AQCaFUw6bTLV9WrenC6lshL6SeGjqLI1vD-bYLIV0"
+    }
+}
+
