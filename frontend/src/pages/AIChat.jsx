@@ -2,9 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
-import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import axios from 'axios';
+import api from '../utils/api';  // Use existing api utility
 
 const AIChat = () => {
   const [messages, setMessages] = useState([
@@ -16,7 +15,6 @@ const AIChat = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
-  const { token } = useAuth();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -37,21 +35,22 @@ const AIChat = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:8001/chat', {
-        message: userMessage,
-        token: token
+      // Call Node.js backend, which forwards to Python AI service
+      const response = await api.post('/ai/ask', {
+        message: userMessage
       });
 
       // Add AI response
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: response.data.answer
+        content: response.data.data.answer
       }]);
     } catch (error) {
-      toast.error('Failed to get AI response');
+      console.error('AI Error:', error);
+      toast.error(error.response?.data?.message || 'Failed to get AI response');
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: '❌ Sorry, I encountered an error. Please try again.'
+        content: '❌ Sorry, I encountered an error. Please make sure the AI service is running and try again.'
       }]);
     } finally {
       setLoading(false);

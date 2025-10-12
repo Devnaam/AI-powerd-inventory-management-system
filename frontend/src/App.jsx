@@ -7,7 +7,8 @@ import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Transactions from './pages/Transactions';
 import Reports from './pages/Reports';
-import AIChat from './pages/AIChat';  // NEW
+import AIChat from './pages/AIChat';
+import Users from './pages/Users';  // NEW
 
 function App() {
   return (
@@ -58,6 +59,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <AIChat />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute>
+                <Users />
               </ProtectedRoute>
             }
           />
