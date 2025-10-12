@@ -1,263 +1,203 @@
-import { useState, useEffect } from 'react';
-import api from '../utils/api';
-import Card from '../components/common/Card';
-import Layout from '../components/layout/Layout';
-import toast from 'react-hot-toast';
-import { 
-  BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
-} from 'recharts';
+import { useState, useEffect } from "react";
+import api from "../utils/api";
+import Layout from "../components/layout/Layout";
+import toast from "react-hot-toast";
+import StatCard from "../components/dashboard/StatCard";
+import CategoryChart from "../components/dashboard/CategoryChart";
+import StockStatusChart from "../components/dashboard/StockStatusChart";
+import TrendChart from "../components/dashboard/TrendChart";
+import TopProducts from "../components/dashboard/TopProducts";
+import LowStockAlert from "../components/dashboard/LowStockAlert";
+import RecentActivity from "../components/dashboard/RecentActivity";
+import RecentTransactions from "../components/dashboard/RecentTransactions";
+
+import { useAuth } from "../context/AuthContext";
 
 const Dashboard = () => {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [categoryData, setCategoryData] = useState([]);
-  const [stockStatusData, setStockStatusData] = useState([]);
+	const [stats, setStats] = useState(null);
+	const [products, setProducts] = useState([]);
+	const [transactions, setTransactions] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const { user } = useAuth();
 
-  const COLORS = {
-    primary: '#1E40AF',
-    success: '#10B981',
-    warning: '#F59E0B',
-    danger: '#EF4444',
-    accent: '#7C3AED',
-    info: '#0EA5E9'
-  };
+	useEffect(() => {
+		fetchDashboardData();
+	}, []);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+	const fetchDashboardData = async () => {
+		try {
+			const [dashboardRes, productsRes, transactionsRes] = await Promise.all([
+				api.get("/dashboard"),
+				api.get("/products"),
+				api.get("/transactions"),
+			]);
 
-  const fetchDashboardData = async () => {
-    try {
-      const [dashboardRes, productsRes] = await Promise.all([
-        api.get('/dashboard'),
-        api.get('/products')
-      ]);
-      
-      setStats(dashboardRes.data.data);
-      processChartData(productsRes.data.data);
-    } catch (error) {
-      toast.error('Failed to load dashboard data');
-    } finally {
-      setLoading(false);
-    }
-  };
+			setStats(dashboardRes.data.data);
+			setProducts(productsRes.data.data);
+			setTransactions(transactionsRes.data.data);
+		} catch (error) {
+			toast.error("Failed to load dashboard data");
+		} finally {
+			setLoading(false);
+		}
+	};
 
-  const processChartData = (products) => {
-    // Category-wise product count
-    const categoryMap = {};
-    const statusMap = { inStock: 0, lowStock: 0, outOfStock: 0 };
+	// Process chart data
+	const getCategoryData = () => {
+		const categoryMap = {};
+		products.forEach((product) => {
+			categoryMap[product.category] = (categoryMap[product.category] || 0) + 1;
+		});
+		return Object.entries(categoryMap).map(([name, count]) => ({
+			name,
+			count,
+		}));
+	};
 
-    products.forEach(product => {
-      // Category data
-      categoryMap[product.category] = (categoryMap[product.category] || 0) + 1;
+	const getStockStatusData = () => {
+		const statusMap = { inStock: 0, lowStock: 0, outOfStock: 0 };
+		products.forEach((product) => {
+			if (product.quantity === 0) statusMap.outOfStock++;
+			else if (product.quantity <= product.reorderLevel) statusMap.lowStock++;
+			else statusMap.inStock++;
+		});
+		return [
+			{ name: "In Stock", value: statusMap.inStock, color: "#10B981" },
+			{ name: "Low Stock", value: statusMap.lowStock, color: "#F59E0B" },
+			{ name: "Out of Stock", value: statusMap.outOfStock, color: "#EF4444" },
+		];
+	};
 
-      // Stock status data
-      if (product.quantity === 0) {
-        statusMap.outOfStock++;
-      } else if (product.quantity <= product.reorderLevel) {
-        statusMap.lowStock++;
-      } else {
-        statusMap.inStock++;
-      }
-    });
+	const getTrendData = () => {
+		const last7Days = [...Array(7)].map((_, i) => {
+			const date = new Date();
+			date.setDate(date.getDate() - (6 - i));
+			return {
+				day: date.toLocaleDateString("en-IN", { weekday: "short" }),
+				stockIn: 0,
+				stockOut: 0,
+			};
+		});
 
-    // Format for charts
-    const categoryChartData = Object.entries(categoryMap).map(([name, value]) => ({
-      name,
-      count: value
-    }));
+		transactions.forEach((t) => {
+			const transDate = new Date(t.transactionDate);
+			const diffDays = Math.floor(
+				(new Date() - transDate) / (1000 * 60 * 60 * 24)
+			);
+			if (diffDays < 7) {
+				const index = 6 - diffDays;
+				if (t.type === "IN") last7Days[index].stockIn += t.quantity;
+				else last7Days[index].stockOut += t.quantity;
+			}
+		});
 
-    const statusChartData = [
-      { name: 'In Stock', value: statusMap.inStock, color: COLORS.success },
-      { name: 'Low Stock', value: statusMap.lowStock, color: COLORS.warning },
-      { name: 'Out of Stock', value: statusMap.outOfStock, color: COLORS.danger }
-    ];
+		return last7Days;
+	};
 
-    setCategoryData(categoryChartData);
-    setStockStatusData(statusChartData);
-  };
+	const getTopProducts = () => {
+		return products
+			.map((p) => ({ ...p, value: p.price * p.quantity }))
+			.sort((a, b) => b.value - a.value)
+			.slice(0, 5);
+	};
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      </Layout>
-    );
-  }
+	if (loading) {
+		return (
+			<Layout>
+				<div className="flex flex-col items-center justify-center h-screen">
+					<div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary"></div>
+					<p className="text-text-muted mt-4 font-medium">
+						Loading dashboard...
+					</p>
+				</div>
+			</Layout>
+		);
+	}
 
-  return (
-    <Layout>
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-text-primary">Dashboard</h1>
+	return (
+		<Layout>
+			<div className="space-y-6">
+				{/* Header with Welcome */}
+				<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+					<div>
+						<h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary-light bg-clip-text text-transparent">
+							Welcome back, {user?.name}! 👋
+						</h1>
+						<p className="text-text-muted mt-1">
+							Here's what's happening with your inventory today.
+						</p>
+					</div>
+				</div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-text-muted text-sm">Total Products</p>
-                <p className="text-3xl font-bold text-primary">{stats?.totalProducts || 0}</p>
-              </div>
-              <div className="text-4xl">📦</div>
-            </div>
-          </Card>
+				{/* Stats Grid */}
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+					<StatCard
+						title="Total Products"
+						value={stats?.totalProducts || 0}
+						icon="📦"
+						trend="up"
+						trendValue="+12%"
+						gradientFrom="from-blue-500"
+						gradientTo="to-indigo-600"
+						iconBg="from-blue-500 to-indigo-600"
+					/>
+					<StatCard
+						title="Stock Value"
+						value={`₹${(stats?.totalStockValue || 0).toLocaleString()}`}
+						icon="💰"
+						trend="up"
+						trendValue="+8%"
+						gradientFrom="from-emerald-500"
+						gradientTo="to-teal-600"
+						iconBg="from-emerald-500 to-teal-600"
+					/>
+					<StatCard
+						title="Low Stock"
+						value={stats?.lowStockCount || 0}
+						icon="⚠️"
+						trend="down"
+						trendValue="-3%"
+						gradientFrom="from-amber-500"
+						gradientTo="to-orange-600"
+						iconBg="from-amber-500 to-orange-600"
+					/>
+					<StatCard
+						title="Out of Stock"
+						value={stats?.outOfStockCount || 0}
+						icon="❌"
+						trend="down"
+						trendValue="-5%"
+						gradientFrom="from-red-500"
+						gradientTo="to-rose-600"
+						iconBg="from-red-500 to-rose-600"
+					/>
+				</div>
 
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-text-muted text-sm">Stock Value</p>
-                <p className="text-3xl font-bold text-success">₹{stats?.totalStockValue?.toLocaleString() || 0}</p>
-              </div>
-              <div className="text-4xl">💰</div>
-            </div>
-          </Card>
+				{/* Charts Row 1 */}
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+					<CategoryChart data={getCategoryData()} />
+					<StockStatusChart data={getStockStatusData()} />
+				</div>
 
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-text-muted text-sm">Low Stock Items</p>
-                <p className="text-3xl font-bold text-warning">{stats?.lowStockCount || 0}</p>
-              </div>
-              <div className="text-4xl">⚠️</div>
-            </div>
-          </Card>
+				{/* Charts Row 2 */}
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+					<div className="lg:col-span-2">
+						<TrendChart data={getTrendData()} />
+					</div>
+					<TopProducts products={getTopProducts()} />
+				</div>
 
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-text-muted text-sm">Out of Stock</p>
-                <p className="text-3xl font-bold text-danger">{stats?.outOfStockCount || 0}</p>
-              </div>
-              <div className="text-4xl">❌</div>
-            </div>
-          </Card>
-        </div>
+				{/* Activity Row */}
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+					<RecentActivity stats={stats} />
+					<LowStockAlert items={stats?.lowStockItems || []} />
+				</div>
 
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Category Distribution Bar Chart */}
-          <Card title="Products by Category">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={categoryData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" fill={COLORS.primary} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-
-          {/* Stock Status Pie Chart */}
-          <Card title="Stock Status Overview">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={stockStatusData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {stockStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
-        </div>
-
-        {/* Today's Activity & Low Stock */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card title="Today's Activity">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                <span className="text-text-secondary">Stock In</span>
-                <span className="text-xl font-bold text-success">+{stats?.todayStockIn || 0}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-                <span className="text-text-secondary">Stock Out</span>
-                <span className="text-xl font-bold text-danger">-{stats?.todayStockOut || 0}</span>
-              </div>
-            </div>
-          </Card>
-
-          <Card title="Low Stock Alert" className="border-l-4 border-warning">
-            {stats?.lowStockItems?.length > 0 ? (
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {stats.lowStockItems.map((item) => (
-                  <div key={item._id} className="flex justify-between items-center p-3 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
-                    <div>
-                      <p className="font-medium text-text-primary">{item.name}</p>
-                      <p className="text-sm text-text-muted">{item.sku}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-warning font-bold text-lg">{item.quantity}</span>
-                      <p className="text-xs text-text-muted">Reorder: {item.reorderLevel}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-2">✅</div>
-                <p className="text-text-muted">All products are well stocked</p>
-              </div>
-            )}
-          </Card>
-        </div>
-
-        {/* Recent Transactions */}
-        <Card title="Recent Transactions">
-          {stats?.recentTransactions?.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-2 text-text-secondary text-sm">Product</th>
-                    <th className="text-left py-2 text-text-secondary text-sm">Type</th>
-                    <th className="text-left py-2 text-text-secondary text-sm">Quantity</th>
-                    <th className="text-left py-2 text-text-secondary text-sm">Performed By</th>
-                    <th className="text-left py-2 text-text-secondary text-sm">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.recentTransactions.map((transaction) => (
-                    <tr key={transaction._id} className="border-b border-border hover:bg-gray-50">
-                      <td className="py-3 font-medium">{transaction.product?.name}</td>
-                      <td>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          transaction.type === 'IN' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                        }`}>
-                          {transaction.type}
-                        </span>
-                      </td>
-                      <td>{transaction.quantity}</td>
-                      <td className="text-text-muted">{transaction.performedBy?.name}</td>
-                      <td className="text-text-muted text-sm">
-                        {new Date(transaction.transactionDate).toLocaleDateString('en-IN')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-text-muted text-center py-4">No recent transactions</p>
-          )}
-        </Card>
-      </div>
-    </Layout>
-  );
+				{/* Transactions Table */}
+				<RecentTransactions transactions={stats?.recentTransactions || []} />
+			</div>
+		</Layout>
+	);
 };
 
 export default Dashboard;

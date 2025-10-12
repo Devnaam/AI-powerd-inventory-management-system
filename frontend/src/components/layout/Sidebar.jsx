@@ -9,7 +9,7 @@ const Sidebar = () => {
     { path: '/products', label: 'Products', icon: '📦', roles: ['admin', 'manager', 'staff'] },
     { path: '/transactions', label: 'Transactions', icon: '🔄', roles: ['admin', 'manager', 'staff'] },
     { path: '/reports', label: 'Reports', icon: '📈', roles: ['admin', 'manager'] },
-    { path: '/ai-chat', label: 'AI Assistant', icon: '🤖', roles: ['admin', 'manager', 'staff'] },  // NEW
+    // Removed AI Chat from sidebar since it's now a floating widget
     { path: '/users', label: 'Users', icon: '👥', roles: ['admin'] },
   ];
 
@@ -34,6 +34,17 @@ const Sidebar = () => {
             <span className="font-medium">{item.label}</span>
           </NavLink>
         ))}
+      </div>
+
+      {/* AI Assistant Info Badge */}
+      <div className="mt-8 p-4 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl border border-primary/30">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-2xl">🤖</span>
+          <span className="text-sm font-bold">AI Assistant</span>
+        </div>
+        <p className="text-xs text-text-inverse/80">
+          Click the floating button to chat with AI!
+        </p>
       </div>
     </aside>
   );

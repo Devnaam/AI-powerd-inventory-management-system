@@ -2,13 +2,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import FloatingChatWidget from './components/chat/FloatingChatWidget';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Transactions from './pages/Transactions';
 import Reports from './pages/Reports';
-import AIChat from './pages/AIChat';
-import Users from './pages/Users';  // NEW
+import Users from './pages/Users';
 
 function App() {
   return (
@@ -55,15 +55,6 @@ function App() {
           />
 
           <Route
-            path="/ai-chat"
-            element={
-              <ProtectedRoute>
-                <AIChat />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
             path="/users"
             element={
               <ProtectedRoute>
@@ -74,6 +65,9 @@ function App() {
           
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+        
+        {/* Floating AI Chat Widget - Always visible when authenticated */}
+        <FloatingChatWidget />
       </AuthProvider>
     </BrowserRouter>
   );
