@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Card from '../common/Card';
 
 const CategoryChart = ({ data }) => {
@@ -13,7 +13,6 @@ const CategoryChart = ({ data }) => {
     return icons[category] || '📦';
   };
 
-  // Add icons to data
   const dataWithIcons = data.map(item => ({
     ...item,
     displayName: `${getCategoryIcon(item.name)} ${item.name}`
@@ -22,9 +21,9 @@ const CategoryChart = ({ data }) => {
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white px-4 py-3 rounded-lg shadow-xl border-2 border-primary/20">
-          <p className="font-semibold text-text-primary">{payload[0].payload.name}</p>
-          <p className="text-primary font-bold text-lg">{payload[0].value} products</p>
+        <div className="bg-white px-4 py-3 rounded-xl shadow-lg border border-gray-200">
+          <p className="font-semibold text-gray-900">{payload[0].payload.name}</p>
+          <p className="text-blue-600 font-bold text-lg">{payload[0].value} products</p>
         </div>
       );
     }
@@ -32,16 +31,16 @@ const CategoryChart = ({ data }) => {
   };
 
   return (
-    <Card>
-      <div className="mb-4">
-        <h3 className="text-xl font-bold text-text-primary">Products by Category</h3>
-        <p className="text-sm text-text-muted">Distribution across categories</p>
-      </div>
-      
+    <Card
+      title="Products by Category"
+      subtitle="Distribution across categories"
+    >
       {data.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64">
-          <span className="text-6xl mb-4">📊</span>
-          <p className="text-text-muted">No category data available</p>
+          <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <p className="text-gray-500">No category data available</p>
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
@@ -66,7 +65,7 @@ const CategoryChart = ({ data }) => {
             <defs>
               <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#3B82F6" stopOpacity={1}/>
-                <stop offset="100%" stopColor="#1E40AF" stopOpacity={1}/>
+                <stop offset="100%" stopColor="#1D4ED8" stopOpacity={1}/>
               </linearGradient>
             </defs>
           </BarChart>

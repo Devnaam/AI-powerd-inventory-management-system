@@ -1,40 +1,59 @@
 const Input = ({ 
   label, 
   type = 'text', 
-  placeholder, 
-  value, 
-  onChange, 
+  name,
+  value,
+  onChange,
+  placeholder,
   required = false,
-  error,
   disabled = false,
-  icon
+  error,
+  icon,
+  helperText,
+  className = ''
 }) => {
   return (
-    <div className="mb-4">
+    <div className={`w-full ${className}`}>
       {label && (
-        <label className="block text-text-secondary text-sm font-medium mb-2">
-          {label} {required && <span className="text-danger">*</span>}
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
+      
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
             {icon}
           </div>
         )}
+        
         <input
           type={type}
-          placeholder={placeholder}
+          name={name}
           value={value}
           onChange={onChange}
+          placeholder={placeholder}
           required={required}
           disabled={disabled}
-          className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-4 py-2 border ${
-            error ? 'border-danger' : 'border-border'
-          } rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed`}
+          className={`
+            w-full px-4 py-2.5 border rounded-xl bg-white text-gray-900 placeholder-gray-400
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+            transition-all duration-200
+            disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed
+            ${icon ? 'pl-10' : ''}
+            ${error ? 'border-red-500 focus:ring-red-500' : 'border-gray-200'}
+          `}
         />
       </div>
-      {error && <p className="text-danger text-sm mt-1">{error}</p>}
+      
+      {error && (
+        <p className="mt-1.5 text-sm text-red-500">{error}</p>
+      )}
+      
+      {helperText && !error && (
+        <p className="mt-1.5 text-sm text-gray-500">{helperText}</p>
+      )}
     </div>
   );
 };
