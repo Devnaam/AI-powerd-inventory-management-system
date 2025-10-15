@@ -6,6 +6,7 @@ import FloatingChatWidget from './components/chat/FloatingChatWidget';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
+import ProductDetails from './pages/ProductDetails';
 import Transactions from './pages/Transactions';
 import Reports from './pages/Reports';
 import Users from './pages/Users';
@@ -17,7 +18,7 @@ function App() {
         <Toaster position="top-right" />
         <Routes>
           <Route path="/login" element={<Login />} />
-          
+
           <Route
             path="/dashboard"
             element={
@@ -35,6 +36,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/products/:productId"
+            element={
+              <ProtectedRoute>
+                <ProductDetails />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/transactions"
@@ -44,7 +53,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/reports"
             element={
@@ -53,7 +61,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/users"
             element={
@@ -62,11 +69,8 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
-        
-        {/* Floating AI Chat Widget - Always visible when authenticated */}
         <FloatingChatWidget />
       </AuthProvider>
     </BrowserRouter>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import api from "../utils/api";
 import Layout from "../components/layout/Layout";
 import Card from "../components/common/Card";
@@ -45,7 +45,7 @@ const Reports = () => {
 				setReportData(response.data.data);
 			}
 			toast.success("Report generated successfully");
-		} catch (error) {
+		} catch {
 			toast.error("Failed to generate report");
 		} finally {
 			setLoading(false);
@@ -180,9 +180,9 @@ const Reports = () => {
 
 				{/* Report Configuration */}
 				<Card title="Generate Report">
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 						{/* Report Type */}
-						<div>
+						<div className="sm:col-span-2 lg:col-span-1">
 							<label className="block text-text-secondary text-sm font-medium mb-2">
 								Report Type
 							</label>
@@ -198,7 +198,7 @@ const Reports = () => {
 
 						{/* Date Range (for transactions) */}
 						{reportType === "transactions" && (
-							<div>
+							<div className="sm:col-span-2 lg:col-span-1">
 								<label className="block text-text-secondary text-sm font-medium mb-2">
 									Date Range
 								</label>
@@ -256,7 +256,7 @@ const Reports = () => {
 				{reportData.length > 0 && (
 					<Card>
 						<div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-							<div>
+							<div className="text-center sm:text-left">
 								<p className="text-lg font-semibold text-text-primary">
 									Report Generated: {reportData.length} records
 								</p>
@@ -264,11 +264,11 @@ const Reports = () => {
 									Export this report in your preferred format
 								</p>
 							</div>
-							<div className="flex gap-3">
-								<Button onClick={exportToCSV} variant="success">
+							<div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
+								<Button onClick={exportToCSV} variant="success" fullWidth>
 									📄 Export CSV
 								</Button>
-								<Button onClick={exportToPDF} variant="primary">
+								<Button onClick={exportToPDF} variant="primary" fullWidth>
 									📑 Export PDF
 								</Button>
 							</div>
@@ -279,7 +279,8 @@ const Reports = () => {
 				{/* Report Preview */}
 				{reportData.length > 0 && (
 					<Card title="Report Preview">
-						<div className="overflow-x-auto max-h-96">
+						{/* Desktop View */}
+						<div className="hidden md:block overflow-x-auto max-h-96">
 							{reportType === "inventory" ? (
 								<table className="w-full">
 									<thead className="sticky top-0 bg-white">
@@ -385,6 +386,95 @@ const Reports = () => {
 									</tbody>
 								</table>
 							)}
+						</div>
+
+						{/* Mobile View */}
+						<div className="md:hidden space-y-4 max-h-96 overflow-y-auto">
+							{reportType === "inventory"
+								? reportData.map((item) => (
+										<div
+											key={item._id}
+											className="p-4 border rounded-lg space-y-2"
+										>
+											<div className="flex justify-between items-start">
+												<div>
+													<h3 className="font-semibold">{item.name}</h3>
+													<p className="text-sm text-text-secondary">
+														ID: {item.productId}
+													</p>
+												</div>
+												<span
+													className={`px-2 py-1 rounded-full text-xs font-medium ${
+														item.quantity === 0
+															? "bg-red-100 text-red-700"
+															: item.quantity <= item.reorderLevel
+															? "bg-amber-100 text-amber-700"
+															: "bg-green-100 text-green-700"
+													}`}
+												>
+													{item.quantity === 0
+														? "Out of Stock"
+														: item.quantity <= item.reorderLevel
+														? "Low Stock"
+														: "In Stock"}
+												</span>
+											</div>
+											<div className="grid grid-cols-2 gap-2 text-sm">
+												<div>
+													<span className="text-text-secondary">Category:</span>
+													<p>{item.category}</p>
+												</div>
+												<div>
+													<span className="text-text-secondary">Price:</span>
+													<p>₹{item.price.toLocaleString()}</p>
+												</div>
+												<div>
+													<span className="text-text-secondary">Quantity:</span>
+													<p>{item.quantity}</p>
+												</div>
+											</div>
+										</div>
+								  ))
+								: reportData.map((item) => (
+										<div
+											key={item._id}
+											className="p-4 border rounded-lg space-y-2"
+										>
+											<div className="flex justify-between items-start">
+												<div>
+													<h3 className="font-semibold">
+														{item.product?.name}
+													</h3>
+													<p className="text-sm text-text-secondary">
+														{new Date(item.transactionDate).toLocaleDateString(
+															"en-IN"
+														)}
+													</p>
+												</div>
+												<span
+													className={`px-2 py-1 rounded text-xs font-medium ${
+														item.type === "IN"
+															? "bg-green-100 text-green-700"
+															: "bg-red-100 text-red-700"
+													}`}
+												>
+													{item.type}
+												</span>
+											</div>
+											<div className="grid grid-cols-2 gap-2 text-sm">
+												<div>
+													<span className="text-text-secondary">Quantity:</span>
+													<p>{item.quantity}</p>
+												</div>
+												<div>
+													<span className="text-text-secondary">
+														Performed By:
+													</span>
+													<p>{item.performedBy?.name}</p>
+												</div>
+											</div>
+										</div>
+								  ))}
 						</div>
 					</Card>
 				)}

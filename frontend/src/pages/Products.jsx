@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -17,6 +18,7 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   const categories = ['All', 'Electronics', 'Furniture', 'Food', 'Clothing', 'Other'];
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
@@ -35,7 +37,6 @@ const Products = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
-
     try {
       await api.delete(`/products/${id}`);
       toast.success('Product deleted successfully');
@@ -244,7 +245,10 @@ const Products = () => {
 
                     {/* Actions */}
                     <div className="flex gap-2 pt-4 border-t border-gray-200">
-                      <button className="flex-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium">
+                      <button
+                        className="flex-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
+                        onClick={() => navigate(`/products/${product._id}`)}
+                      >
                         Edit
                       </button>
                       <button 
